@@ -1,0 +1,191 @@
+/* General Body & Reset */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Modern, clean font */
+    margin: 0;
+    padding: 0;
+    background: linear-gradient(135deg, #f0f4f8, #d9e2ec); /* Soft gradient background */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    color: #333; /* Darker text for readability */
+    line-height: 1.6;
+}
+
+/* Chat Container - Main Box */
+.chat-container {
+    width: 90%; /* Slightly wider for better mobile fit */
+    max-width: 700px; /* Slightly smaller max-width for focus */
+    background-color: #ffffff; /* Pure white background */
+    border-radius: 12px; /* More rounded corners */
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); /* Stronger, softer shadow */
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    max-height: 90vh; /* Prevent container from being too tall on large screens */
+    border: 1px solid #e0e6ed; /* Subtle border */
+}
+
+/* Header/Title */
+h1 {
+    background-color: #4a7dff; /* Brand color blue */
+    color: #ffffff;
+    padding: 20px;
+    margin: 0;
+    font-size: 1.8em;
+    text-align: center;
+    border-bottom: 1px solid #3a6cdb; /* Darker border for depth */
+    letter-spacing: 0.5px;
+}
+
+/* Chat Box - Message Display Area */
+.chat-box {
+    flex-grow: 1;
+    padding: 20px;
+    overflow-y: auto; /* Enable scrolling for messages */
+    max-height: 60vh; /* Control height */
+    scroll-behavior: smooth; /* Smooth scrolling to new messages */
+    background-color: #fcfdff; /* Very light background for messages */
+    border-bottom: 1px solid #eef2f6; /* Lighter separator */
+}
+
+/* Message Bubble - General Styling */
+.message-bubble {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 15px; /* More space between messages */
+}
+
+/* User Message Specifics */
+.message-bubble.user {
+    align-items: flex-end; /* Align user messages to the right */
+}
+.message-bubble.user p {
+    background-color: #e6f2ff; /* Light blue for user */
+    color: #333;
+    border-radius: 18px 18px 5px 18px; /* Softer, asymmetric corners */
+    padding: 12px 18px; /* More padding */
+    max-width: 80%; /* Allow messages to be a bit wider */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08); /* Subtle shadow */
+}
+
+/* Bot Message Specifics */
+.message-bubble.bot {
+    align-items: flex-start; /* Align bot messages to the left */
+}
+.message-bubble.bot p {
+    background-color: #f0f0f0; /* Light gray for bot */
+    color: #333;
+    border-radius: 18px 18px 18px 5px; /* Softer, asymmetric corners */
+    padding: 12px 18px; /* More padding */
+    max-width: 80%;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+}
+
+/* Message Text within Bubbles */
+.message-bubble p {
+    margin: 0;
+    font-size: 0.95em; /* Slightly larger text */
+    word-wrap: break-word;
+}
+
+/* Timestamp/Metadata */
+.message-bubble small {
+    font-size: 0.7em; /* Smaller timestamp */
+    color: #888;
+    margin-top: 5px; /* More space below message bubble */
+    padding: 0 5px; /* Align with bubbles */
+}
+
+/* Input Container - Bottom Bar */
+.input-container {
+    display: flex;
+    padding: 20px;
+    gap: 15px; /* More space between input elements */
+    border-top: 1px solid #eef2f6; /* Separator */
+    background-color: #ffffff;
+}
+
+/* User Input Field */
+#user-input {
+    flex-grow: 1;
+    padding: 12px 15px; /* More padding */
+    border: 1px solid #c9d6e4; /* Softer border */
+    border-radius: 8px; /* More rounded */
+    font-size: 1em;
+    outline: none; /* Remove default outline */
+    transition: border-color 0.2s ease, box-shadow 0.2s ease; /* Smooth transition on focus */
+}
+#user-input::placeholder {
+    color: #a0a8b3; /* Lighter placeholder text */
+}
+#user-input:focus {
+    border-color: #4a7dff; /* Highlight border on focus */
+    box-shadow: 0 0 0 3px rgba(74, 125, 255, 0.2); /* Subtle glow */
+}
+
+/* Mode Select Dropdown */
+#mode-select {
+    padding: 12px 15px; /* Matching padding */
+    border: 1px solid #c9d6e4;
+    border-radius: 8px;
+    background-color: #f7f9fc; /* Light background for dropdown */
+    color: #555;
+    font-size: 1em;
+    cursor: pointer;
+    appearance: none; /* Remove default dropdown arrow */
+    background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23555555%22%20d%3D%22M287%2069.9a14.7%2014.7%200%200%200-20.8%200L146.2%20189.9%2026.3%2069.9A14.7%2014.7%200%200%200%205.5%2090.7L135.8%20221a14.7%2014.7%200%200%200%2020.8%200L287%2090.7a14.7%2014.7%200%200%200%200-20.8z%22%2F%3E%3C%2Fsvg%3E'); /* Custom dropdown arrow */
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 12px;
+    transition: border-color 0.2s ease;
+}
+#mode-select:hover {
+    border-color: #a0a8b3;
+}
+
+/* Send Button */
+#send-button {
+    padding: 12px 20px; /* More padding */
+    border: none;
+    border-radius: 8px;
+    background-color: #4a7dff; /* Brand color blue */
+    color: white;
+    cursor: pointer;
+    font-size: 1em;
+    font-weight: bold;
+    transition: background-color 0.2s ease, transform 0.1s ease; /* Smooth hover and click effects */
+}
+#send-button:hover {
+    background-color: #3a6cdb; /* Darker blue on hover */
+}
+#send-button:active {
+    transform: translateY(1px); /* Slight press effect */
+}
+
+/* Responsiveness for Smaller Screens */
+@media (max-width: 600px) {
+    .chat-container {
+        width: 100%;
+        height: 100vh; /* Full screen height on small devices */
+        border-radius: 0; /* No rounded corners on full screen */
+        box-shadow: none; /* No shadow on full screen */
+        max-height: unset;
+    }
+    .input-container {
+        flex-direction: column; /* Stack input elements vertically */
+        padding: 15px;
+        gap: 10px;
+    }
+    #user-input, #mode-select, #send-button {
+        width: 100%; /* Make them full width */
+        box-sizing: border-box; /* Include padding in width */
+    }
+    .message-bubble.user p,
+    .message-bubble.bot p {
+        max-width: 90%; /* Allow messages to take more width */
+    }
+    h1 {
+        font-size: 1.5em; /* Smaller title */
+    }
+}

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<link rel="stylesheet" href="styles.css">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kaggle FAQ Chatbot</title>
+    <style>
+        body { font-family: sans-serif; max-width: 800px; margin: 20px auto; padding: 0 20px; }
+        #chat-container { border: 1px solid #ccc; padding: 20px; border-radius: 8px; }
+        input[type="text"] { width: calc(100% - 100px); padding: 10px; margin-right: 10px; border: 1px solid #ddd; border-radius: 4px; }
+        button { padding: 10px 15px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background-color: #0056b3; }
+        #response-area { margin-top: 20px; background-color: #f8f8f8; padding: 15px; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <h1>Kaggle FAQ Chatbot</h1>
+    <div id="chat-container">
+        <select id="mode-select">
+            <option value="rag">Generation-based (Hybrid RAG)</option>
+            <option value="embedding">Embedding-based (Direct Lookup)</option>
+        </select>
+        <input type="text" id="user-question" placeholder="Ask a question about Kaggle...">
+        <button onclick="askQuestion()">Send</button>
+        <div id="response-area">
+            <p>Your answers will appear here.</p>
+        </div>
+    </div>
+
+    <script>
+        async function askQuestion() {
+            const question = document.getElementById('user-question').value;
+            const mode = document.getElementById('mode-select').value;
+            const responseArea = document.getElementById('response-area');
+            responseArea.innerHTML = '<p>Loading...</p>';
+
+            if (!question) {
+                responseArea.innerHTML = '<p style="color: red;">Please enter a question.</p>';
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost:5000/ask', { // <--- IMPORTANT: Change this URL for deployment
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ question: question, mode: mode })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    if (mode === 'rag') {
+                        responseArea.innerHTML = `<h4>Generated Answer:</h4><p>${data.answer}</p>`;
+                    } else {
+                        if (data.matched_question) {
+                            responseArea.innerHTML = `
+                                <h4>Matched FAQ:</h4>
+                                <p><strong>Question:</strong> ${data.matched_question}</p>
+                                <p><strong>Answer:</strong> ${data.answer}</p>
+                                ${data.link ? `<p><strong>Link:</strong> <a href="${data.link}" target="_blank">${data.link}</a></p>` : ''}
+                                <p><strong>Confidence:</strong> ${data.confidence_score.toFixed(4)}</p>
+                            `;
+                        } else {
+                            responseArea.innerHTML = `<p>${data.answer}</p>`; // Error message from backend
+                        }
+                    }
+                } else {
+                    responseArea.innerHTML = `<p style="color: red;">Error: ${data.error || 'Something went wrong.'}</p>`;
+                }
+            } catch (error) {
+                responseArea.innerHTML = `<p style="color: red;">Network error: ${error.message}. Is the backend running?</p>`;
+                console.error('Fetch error:', error);
+            }
+        }
+    </script>
+</body>
+</html>
