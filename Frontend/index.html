@@ -1,80 +1,188 @@
 <!DOCTYPE html>
 <html lang="en">
-<link rel="stylesheet" href="styles.css">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kaggle FAQ Chatbot</title>
-    <style>
-        body { font-family: sans-serif; max-width: 800px; margin: 20px auto; padding: 0 20px; }
-        #chat-container { border: 1px solid #ccc; padding: 20px; border-radius: 8px; }
-        input[type="text"] { width: calc(100% - 100px); padding: 10px; margin-right: 10px; border: 1px solid #ddd; border-radius: 4px; }
-        button { padding: 10px 15px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
-        button:hover { background-color: #0056b3; }
-        #response-area { margin-top: 20px; background-color: #f8f8f8; padding: 15px; border-radius: 4px; }
-    </style>
+    <!-- Link to your custom stylesheet for aesthetics -->
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <h1>Kaggle FAQ Chatbot</h1>
-    <div id="chat-container">
-        <select id="mode-select">
-            <option value="rag">Generation-based (Hybrid RAG)</option>
-            <option value="embedding">Embedding-based (Direct Lookup)</option>
-        </select>
-        <input type="text" id="user-question" placeholder="Ask a question about Kaggle...">
-        <button onclick="askQuestion()">Send</button>
-        <div id="response-area">
-            <p>Your answers will appear here.</p>
+    <!-- Main chat container -->
+    <div class="chat-container">
+        <h1>Kaggle FAQ Chatbot</h1>
+
+        <!-- Chat messages display area -->
+        <div class="chat-box" id="chat-box">
+            <!-- Initial bot message will be added by JS after loading -->
+        </div>
+
+        <!-- Input area for user questions -->
+        <div class="input-container">
+            <select id="mode-select">
+                <option value="rag">Generate Answer (Hybrid RAG)</option>
+                <option value="embedding">Find Direct FAQ (Embedding Match)</option>
+            </select>
+            <input type="text" id="user-input" placeholder="Ask a question...">
+            <button id="send-button">Send</button>
+        </div>
+
+        <!-- New: Initial Loading Overlay -->
+        <div id="initial-loading-overlay">
+            <div class="spinner"></div>
+            <p>Loading Chatbot... Initializing AI models.</p>
+            <p>This may take a moment.</p>
         </div>
     </div>
 
     <script>
+        const chatBox = document.getElementById('chat-box');
+        const userInput = document.getElementById('user-input');
+        const sendButton = document.getElementById('send-button');
+        const modeSelect = document.getElementById('mode-select');
+        const initialLoadingOverlay = document.getElementById('initial-loading-overlay');
+
+        // Function to format timestamp
+        function getTimestamp() {
+            const now = new Date();
+            return now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+
+        // Function to add a message to the chat box
+        function addMessage(sender, text, link = null, confidence = null) {
+            const messageBubble = document.createElement('div');
+            messageBubble.classList.add('message-bubble', sender);
+
+            const messageContent = document.createElement('p');
+            messageContent.innerHTML = text; // Use innerHTML to allow for links (e.g., from RAG)
+
+            const timestamp = document.createElement('small');
+            timestamp.textContent = `${sender === 'user' ? 'You' : 'Bot'} - ${getTimestamp()}`;
+
+            messageBubble.appendChild(messageContent);
+            messageBubble.appendChild(timestamp);
+            chatBox.appendChild(messageBubble);
+
+            // Scroll to the bottom of the chat box
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        // Event listener for the Send button
+        sendButton.addEventListener('click', askQuestion);
+
+        // Event listener for Enter key in the input field
+        userInput.addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                askQuestion();
+            }
+        });
+
+        // Function to send the question to the backend
         async function askQuestion() {
-            const question = document.getElementById('user-question').value;
-            const mode = document.getElementById('mode-select').value;
-            const responseArea = document.getElementById('response-area');
-            responseArea.innerHTML = '<p>Loading...</p>';
+            const question = userInput.value.trim();
+            const mode = modeSelect.value;
 
             if (!question) {
-                responseArea.innerHTML = '<p style="color: red;">Please enter a question.</p>';
+                // Using a simple alert for now, consider a custom modal for better UX
+                alert('Please enter a question.');
                 return;
             }
 
+            addMessage('user', question); // Display user's message immediately
+            userInput.value = ''; // Clear input field
+
+            // Add a dynamic loading indicator (Bot is thinking...)
+            const loadingMessage = document.createElement('div');
+            loadingMessage.classList.add('message-bubble', 'bot');
+            loadingMessage.innerHTML = '<p>Thinking<span class="loading-dots"><span>.</span><span>.</span><span>.</span></span></p>';
+            chatBox.appendChild(loadingMessage);
+            chatBox.scrollTop = chatBox.scrollHeight;
+
             try {
-                const response = await fetch('http://localhost:5000/ask', { // <--- IMPORTANT: Change this URL for deployment
+                // IMPORTANT: Replace 'http://localhost:5000' with your deployed backend URL in production
+                const backendUrl = 'http://localhost:5000';
+                const response = await fetch(`${backendUrl}/ask`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ question: question, mode: mode })
+                    body: JSON.stringify({ question: question, mode: mode, k: 3 }) // k=3 for RAG
                 });
+
+                // Remove loading indicator regardless of success or failure
+                if (chatBox.contains(loadingMessage)) {
+                    chatBox.removeChild(loadingMessage);
+                }
 
                 const data = await response.json();
 
                 if (response.ok) {
                     if (mode === 'rag') {
-                        responseArea.innerHTML = `<h4>Generated Answer:</h4><p>${data.answer}</p>`;
-                    } else {
+                        addMessage('bot', data.answer);
+                    } else { // embedding mode
                         if (data.matched_question) {
-                            responseArea.innerHTML = `
-                                <h4>Matched FAQ:</h4>
-                                <p><strong>Question:</strong> ${data.matched_question}</p>
-                                <p><strong>Answer:</strong> ${data.answer}</p>
-                                ${data.link ? `<p><strong>Link:</strong> <a href="${data.link}" target="_blank">${data.link}</a></p>` : ''}
-                                <p><strong>Confidence:</strong> ${data.confidence_score.toFixed(4)}</p>
-                            `;
+                            let answerText = `<b>Matched Question:</b> ${data.matched_question}<br>`;
+                            answerText += `<b>Answer:</b> ${data.answer}<br>`;
+                            if (data.link) {
+                                answerText += `<b>Link:</b> <a href="${data.link}" target="_blank">${data.link}</a><br>`;
+                            }
+                            answerText += `<b>Confidence Score:</b> ${data.confidence_score.toFixed(4)}`;
+                            addMessage('bot', answerText);
                         } else {
-                            responseArea.innerHTML = `<p>${data.answer}</p>`; // Error message from backend
+                            // This path handles "Could not find a direct match..." message from backend
+                            addMessage('bot', data.answer);
                         }
                     }
                 } else {
-                    responseArea.innerHTML = `<p style="color: red;">Error: ${data.error || 'Something went wrong.'}</p>`;
+                    // Display backend error message
+                    addMessage('bot', `Error: ${data.error || 'Something went wrong with the backend.'}`);
+                    console.error('Backend error:', data.error);
                 }
             } catch (error) {
-                responseArea.innerHTML = `<p style="color: red;">Network error: ${error.message}. Is the backend running?</p>`;
+                // Display network error message
+                addMessage('bot', `Network error: Could not connect to the backend. Please ensure the backend server is running. (${error.message})`);
                 console.error('Fetch error:', error);
             }
         }
+
+        // --- Initial Load Logic ---
+        // This function runs when the page loads to check if the backend is ready
+        async function checkBackendReady() {
+            try {
+                // Attempt to make a simple request to the backend.
+                // You might want a dedicated '/health' endpoint for this in a real app.
+                // For now, we'll just try to send an empty query to see if it responds.
+                const backendUrl = 'http://localhost:5000'; // Keep this for local testing
+                const response = await fetch(`${backendUrl}/ask`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ question: "", mode: "rag" }) // Send empty query
+                });
+
+                if (response.ok || response.status === 400) { // 400 is expected for empty query
+                    // Backend is ready! Hide the overlay and add the initial bot message
+                    initialLoadingOverlay.classList.add('hidden');
+                    // Wait for the fade-out transition to complete before removing from DOM
+                    initialLoadingOverlay.addEventListener('transitionend', () => {
+                        initialLoadingOverlay.style.display = 'none';
+                    }, { once: true });
+
+                    addMessage('bot', "Hello! I'm your Kaggle FAQ Chatbot. Ask me anything about Kaggle!");
+                    userInput.focus(); // Focus on input field
+                } else {
+                    // Backend not ready, retry after a delay
+                    console.warn('Backend not ready, retrying...');
+                    setTimeout(checkBackendReady, 2000); // Retry every 2 seconds
+                }
+            } catch (error) {
+                // Network error, backend likely not running. Retry.
+                console.error('Backend connection failed, retrying...', error);
+                setTimeout(checkBackendReady, 2000); // Retry every 2 seconds
+            }
+        }
+
+        // Start checking backend readiness when the page loads
+        document.addEventListener('DOMContentLoaded', checkBackendReady);
     </script>
 </body>
 </html>
