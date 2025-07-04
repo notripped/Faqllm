@@ -1,0 +1,51 @@
+# Python specific ignores
+*.pyc
+*.pyo
+__pycache__/
+.pytest_cache/
+.env
+venv/
+.venv/
+env/
+faq-env/
+pip-log.txt
+pip-delete-this-arg.txt
+.tox/
+.coverage
+.coverage.*
+.cache
+.mypy_cache/
+.dmypy.json
+.ruff_cache/
+.ipynb_checkpoints/
+.spyproject/
+celerybeat-schedule
+.history/
+
+# IDE specific ignores
+.idea/             # IntelliJ IDEA / PyCharm
+*.iml              # IntelliJ IDEA
+.vscode/           # Visual Studio Code (optional, if you want to share settings)
+*.sublime-project  # Sublime Text
+*.sublime-workspace
+*.swp              # Vim swap files
+
+# Operating System specific ignores
+.DS_Store          # macOS
+.Trashes           # macOS
+ehthumbs.db        # Windows
+Thumbs.db          # Windows
+Desktop.ini        # Windows
+$RECYCLE.BIN/      # Windows
+
+# Build artifacts
+dist/
+build/
+*.egg-info/
+
+# Data files (uncomment if you want to ignore your CSV)
+# Kaggle related questions on Qoura - Questions.csv
+
+# Large files managed by Git LFS (if you were to use LFS for other large data files later)
+# *.mp4 filter=lfs diff=lfs merge=lfs - text
+# *.zip filter=lfs diff=lfs merge=lfs - text
