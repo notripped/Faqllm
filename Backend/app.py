@@ -4,6 +4,7 @@ from flask_cors import CORS
 import numpy as np
 import pandas as pd
 import faiss
+import os
 import re
 import ollama
 from sentence_transformers import SentenceTransformer
@@ -32,7 +33,7 @@ def initialize_model():
 
     print("DEBUG: initialize_model() started.")
 
-    data_file_path = r'..\Kaggle related questions on Qoura - Questions.csv'
+    data_file_path = os.path.join(os.path.dirname(__file__), '..', 'Kaggle related questions on Qoura - Questions.csv')
     print(f"DEBUG: Attempting to load data from: {data_file_path}")
 
     try:
