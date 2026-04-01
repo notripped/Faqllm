@@ -175,6 +175,12 @@ def ask():
     user_question = request.json.get('question')
     mode = request.json.get('mode', 'rag')
     k = request.json.get('k', 3)
+    try:
+        k = int(k)
+        if k < 1 or k > 10:
+            return jsonify({"error": "k must be between 1 and 10"}), 400
+    except (TypeError, ValueError):
+        return jsonify({"error": "k must be an integer"}), 400
 
     if not user_question:
         return jsonify({"error": "No question provided"}), 400
@@ -205,4 +211,4 @@ def ask():
 
 if __name__ == '__main__':
     initialize_model()
-    app.run(debug=True, port=5000)
+    app.run(debug=False, port=5000)
