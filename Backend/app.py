@@ -154,8 +154,8 @@ Answer:"""
         return response['message']['content']
     except Exception as e:
         print(f"Error generating answer with LLM: {e}")
-        # Fallback: return the top matched answer directly
-        return faqs[0]['answer'] if faqs else "An error occurred while generating the answer."
+        fallback = faqs[0]['answer'] if faqs else "No answer available."
+        return f"[Ollama unavailable — showing direct FAQ match]\n\n{fallback}"
 
 def get_brief_explanation(user_query):
     try:
@@ -167,7 +167,7 @@ def get_brief_explanation(user_query):
         return response['message']['content'].strip()
     except Exception as e:
         print(f"Error generating explanation: {e}")
-        return "A brief explanation is not available at the moment."
+        return "[Ollama unavailable]"
 
 # --- API Endpoints ---
 @app.route('/ask', methods=['POST'])
