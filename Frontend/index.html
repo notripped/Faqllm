@@ -48,15 +48,18 @@
             return now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         }
 
-        // Escape HTML entities then linkify plain URLs — prevents XSS while keeping links clickable
-        function sanitizeAndLinkify(text) {
-            const escaped = text
+        function escapeHtml(text) {
+            return String(text)
                 .replace(/&/g, '&amp;')
                 .replace(/</g, '&lt;')
                 .replace(/>/g, '&gt;')
                 .replace(/"/g, '&quot;')
                 .replace(/'/g, '&#39;');
-            return escaped.replace(
+        }
+
+        // Escape HTML entities then linkify plain URLs — prevents XSS while keeping links clickable
+        function sanitizeAndLinkify(text) {
+            return escapeHtml(text).replace(
                 /(https?:\/\/[^\s<>"']+)/g,
                 '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>'
             );
@@ -135,12 +138,16 @@
                         addMessage('bot', data.answer);
                     } else { // embedding mode
                         if (data.matched_question) {
-                            let answerText = `<b>Matched Question:</b> ${data.matched_question}<br>`;
-                            answerText += `<b>Answer:</b> ${data.answer}<br>`;
+                            const safeQuestion = escapeHtml(data.matched_question);
+                            const safeAnswer = escapeHtml(data.answer);
+                            const safeScore = escapeHtml(data.confidence_score.toFixed(4));
+                            let answerText = `<b>Matched Question:</b> ${safeQuestion}<br>`;
+                            answerText += `<b>Answer:</b> ${safeAnswer}<br>`;
                             if (data.link) {
-                                answerText += `<b>Link:</b> <a href="${data.link}" target="_blank">${data.link}</a><br>`;
+                                const safeLink = escapeHtml(data.link);
+                                answerText += `<b>Link:</b> <a href="${safeLink}" target="_blank" rel="noopener noreferrer">${safeLink}</a><br>`;
                             }
-                            answerText += `<b>Confidence Score:</b> ${data.confidence_score.toFixed(4)}`;
+                            answerText += `<b>Confidence Score:</b> ${safeScore}`;
                             addMessage('bot', answerText);
                         } else {
                             // This path handles "Could not find a direct match..." message from backend
