@@ -65,7 +65,7 @@ def initialize_model():
 
 def find_best_match(user_query, k=1, index=None, dataframe=None):
     if index is None or dataframe is None:
-        return None, None, None, 0.0
+        return []
 
     processed_user_query = preprocess_text(user_query)
     query_embedding = embedding_model.encode([processed_user_query])
@@ -84,41 +84,25 @@ def find_best_match(user_query, k=1, index=None, dataframe=None):
             return raw
         return None
 
-    if k == 1:
-        idx = I[0][0]
-        confidence = float(1 - (D[0][0] / 2))
-        return (
-            str(dataframe['Questions'].iloc[idx]),
-            str(dataframe['Answered'].iloc[idx]),
-            build_link(dataframe['Link'].iloc[idx]),
-            confidence
-        )
-    else:
-        results = []
-        for i in range(min(k, len(I[0]))):
-            idx = I[0][i]
-            results.append({
-                'question': str(dataframe['Questions'].iloc[idx]),
-                'answer': str(dataframe['Answered'].iloc[idx]),
-                'link': build_link(dataframe['Link'].iloc[idx]),
-                'confidence': float(1 - (D[0][i] / 2))
-            })
-        return results
+    results = []
+    for i in range(min(k, len(I[0]))):
+        idx = I[0][i]
+        results.append({
+            'question': str(dataframe['Questions'].iloc[idx]),
+            'answer': str(dataframe['Answered'].iloc[idx]),
+            'link': build_link(dataframe['Link'].iloc[idx]),
+            'confidence': float(1 - (D[0][i] / 2))
+        })
+    return results
 
 def generate_answer_with_rag(user_query, num_retrieved_faqs=3, index=None, dataframe=None):
     if index is None or dataframe is None:
         return "An internal error occurred."
 
-    retrieved = find_best_match(user_query, k=num_retrieved_faqs, index=index, dataframe=dataframe)
+    faqs = find_best_match(user_query, k=num_retrieved_faqs, index=index, dataframe=dataframe)
 
-    if num_retrieved_faqs == 1:
-        if retrieved[0] is None:
-            return "No relevant FAQs found."
-        faqs = [{'question': retrieved[0], 'answer': retrieved[1], 'link': retrieved[2], 'confidence': retrieved[3]}]
-    else:
-        if not retrieved:
-            return "No relevant FAQs found."
-        faqs = retrieved
+    if not faqs:
+        return "No relevant FAQs found."
 
     context_str = ""
     for i, faq in enumerate(faqs):
@@ -194,14 +178,15 @@ def ask():
         return jsonify({"answer": answer, "explanation": explanation})
 
     elif mode == 'embedding':
-        question, answer, link, score = find_best_match(user_question, k=1, index=faiss_index, dataframe=df)
-        if question:
+        results = find_best_match(user_question, k=1, index=faiss_index, dataframe=df)
+        if results:
+            match = results[0]
             explanation = get_brief_explanation(user_question)
             return jsonify({
-                "matched_question": question,
-                "answer": answer,
-                "link": link,
-                "confidence_score": float(score),
+                "matched_question": match['question'],
+                "answer": match['answer'],
+                "link": match['link'],
+                "confidence_score": match['confidence'],
                 "explanation": explanation
             })
         else:

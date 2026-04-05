@@ -58,39 +58,23 @@ def find_best_match(user_query, k=1):
             return raw
         return None
 
-    if k == 1:
-        idx = I[0][0]
-        confidence = float(1 - (D[0][0] / 2))
-        return (
-            str(df['Questions'].iloc[idx]),
-            str(df['Answered'].iloc[idx]),
-            build_link(df['Link'].iloc[idx]),
-            confidence
-        )
-    else:
-        results = []
-        for i in range(min(k, len(I[0]))):
-            idx = I[0][i]
-            results.append({
-                'question': str(df['Questions'].iloc[idx]),
-                'answer': str(df['Answered'].iloc[idx]),
-                'link': build_link(df['Link'].iloc[idx]),
-                'confidence': float(1 - (D[0][i] / 2))
-            })
-        return results
+    results = []
+    for i in range(min(k, len(I[0]))):
+        idx = I[0][i]
+        results.append({
+            'question': str(df['Questions'].iloc[idx]),
+            'answer': str(df['Answered'].iloc[idx]),
+            'link': build_link(df['Link'].iloc[idx]),
+            'confidence': float(1 - (D[0][i] / 2))
+        })
+    return results
 
 # --- RAG Generation Function ---
 def generate_answer_with_rag(user_query, num_retrieved_faqs=3):
-    retrieved = find_best_match(user_query, k=num_retrieved_faqs)
+    faqs = find_best_match(user_query, k=num_retrieved_faqs)
 
-    if num_retrieved_faqs == 1:
-        if retrieved[0] is None:
-            return "No relevant FAQs found."
-        faqs = [{'question': retrieved[0], 'answer': retrieved[1], 'link': retrieved[2], 'confidence': retrieved[3]}]
-    else:
-        if not retrieved:
-            return "No relevant FAQs found."
-        faqs = retrieved
+    if not faqs:
+        return "No relevant FAQs found."
 
     context_str = ""
     for i, faq in enumerate(faqs):
@@ -151,13 +135,14 @@ if __name__ == "__main__":
                 break
 
             if mode_choice == '1':
-                question, answer, link, score = find_best_match(user_question, k=1)
-                if question:
-                    print(f"\nMatched Question: {question}")
-                    print(f"Answer: {answer}")
-                    if link:
-                        print(f"Link: {link}")
-                    print(f"Confidence Score: {score:.4f}\n")
+                results = find_best_match(user_question, k=1)
+                if results:
+                    match = results[0]
+                    print(f"\nMatched Question: {match['question']}")
+                    print(f"Answer: {match['answer']}")
+                    if match['link']:
+                        print(f"Link: {match['link']}")
+                    print(f"Confidence Score: {match['confidence']:.4f}\n")
                 else:
                     print("Could not find a match.\n")
 
