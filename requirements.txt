@@ -3,4 +3,5 @@ flask-cors
 numpy
 pandas
 faiss-cpu
-google-generativeai
+ollama
+sentence-transformers
